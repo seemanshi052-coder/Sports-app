@@ -1,0 +1,11 @@
+{
+  "name": "The Elitez",
+  "description": "The Elitez - Sports talent evaluation platform with standardized athletic drills, video capture, storage bucket pipeline, athlete profiles, and scout leaderboards.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

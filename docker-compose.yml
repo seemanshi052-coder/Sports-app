@@ -1,0 +1,22 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sports_talent_backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Development convenience: local code changes are visible inside container.
+      - ./backend/app:/app/app
+    restart: unless-stopped
+
+# Initial architecture deliberately does not define a local PostgreSQL
+# container because the planned development platform uses Supabase.
+#
+# If the team later decides to run PostgreSQL locally, add a postgres
+# service and a named volume rather than storing database data in the
+# repository.
