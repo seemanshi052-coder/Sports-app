@@ -3,29 +3,23 @@ import {
   Trophy,
   Activity,
   Smartphone,
-  LayoutDashboard
+  Video,
+  Users
 } from 'lucide-react';
-import { UserRole } from '../types';
 
 interface NavbarProps {
-  currentView: 'athlete_dashboard' | 'assessment_room' | 'assessment_result' | 'leaderboard' | 'scout_dashboard';
-  onNavigate: (view: 'athlete_dashboard' | 'leaderboard' | 'scout_dashboard') => void;
-  userRole: UserRole;
-  onSwitchRole: (role: UserRole) => void;
-  activeSport: string;
-  onSelectSport: (sport: string) => void;
+  currentView: 'athlete_dashboard' | 'assessment_room' | 'assessment_result' | 'leaderboard' | 'community';
+  onNavigate: (view: 'athlete_dashboard' | 'leaderboard' | 'community') => void;
   onStartNewAssessment: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onNavigate,
-  userRole,
-  onSwitchRole,
   onStartNewAssessment
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
+    <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Platform Brand */}
@@ -41,10 +35,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-display font-bold text-lg text-white tracking-tight flex items-center gap-1.5">
                   THE <span className="text-cyan-400">ELITEZ</span>
                   <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-500/30">
-                    Mobile App
+                    Athlete App
                   </span>
                 </span>
-                <p className="text-[11px] text-slate-400 hidden sm:block">Standardized Sports Video Analysis & Scouting</p>
+                <p className="text-[11px] text-slate-400 hidden sm:block">Standardized Sports Video Assessment</p>
               </div>
             </div>
           </div>
@@ -60,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Smartphone className="w-4 h-4" />
-              Athlete Portal
+              Athlete Profile & Assessments
             </button>
 
             <button
@@ -72,62 +66,31 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Trophy className="w-4 h-4 text-amber-400" />
-              Verified Leaderboard
+              Leaderboard
             </button>
 
             <button
-              onClick={() => onNavigate('scout_dashboard')}
+              onClick={() => onNavigate('community')}
               className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                currentView === 'scout_dashboard'
+                currentView === 'community'
                   ? 'bg-slate-800 text-cyan-400 border border-slate-700'
                   : 'text-slate-300 hover:text-white hover:bg-slate-900'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4 text-indigo-400" />
-              Scout & Coach Hub
+              <Users className="w-4 h-4 text-indigo-400" />
+              Community & Opportunities
             </button>
           </nav>
 
-          {/* Quick Action & Persona Switcher */}
+          {/* Quick Action Button */}
           <div className="flex items-center gap-3">
-            {/* Quick assessment launch button */}
             <button
               onClick={onStartNewAssessment}
               className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow-md shadow-cyan-500/20 flex items-center gap-1.5 transition-all active:scale-95"
             >
-              <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">Record</span> Assessment
+              <Video className="w-4 h-4" />
+              <span>Record Assessment</span>
             </button>
-
-            {/* Persona switcher pill */}
-            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-1 text-xs">
-              <button
-                onClick={() => {
-                  onSwitchRole('athlete');
-                  onNavigate('athlete_dashboard');
-                }}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                  userRole === 'athlete'
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Athlete View
-              </button>
-              <button
-                onClick={() => {
-                  onSwitchRole('scout');
-                  onNavigate('scout_dashboard');
-                }}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                  userRole === 'scout'
-                    ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Scout Hub
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -136,30 +99,32 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="md:hidden flex items-center justify-around bg-slate-900/90 border-t border-slate-800/80 px-2 py-2 text-xs">
         <button
           onClick={() => onNavigate('athlete_dashboard')}
-          className={`flex flex-col items-center gap-1 py-1 px-2 rounded ${
-            currentView === 'athlete_dashboard' ? 'text-cyan-400 font-semibold' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded ${
+            currentView === 'athlete_dashboard' || currentView === 'assessment_room' || currentView === 'assessment_result'
+              ? 'text-cyan-400 font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Smartphone className="w-4 h-4" />
-          <span>Athlete</span>
+          <span>Profile</span>
         </button>
         <button
           onClick={() => onNavigate('leaderboard')}
-          className={`flex flex-col items-center gap-1 py-1 px-2 rounded ${
-            currentView === 'leaderboard' ? 'text-cyan-400 font-semibold' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded ${
+            currentView === 'leaderboard' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Trophy className="w-4 h-4 text-amber-400" />
-          <span>Rankings</span>
+          <span>Leaderboard</span>
         </button>
         <button
-          onClick={() => onNavigate('scout_dashboard')}
-          className={`flex flex-col items-center gap-1 py-1 px-2 rounded ${
-            currentView === 'scout_dashboard' ? 'text-indigo-400 font-semibold' : 'text-slate-400'
+          onClick={() => onNavigate('community')}
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded ${
+            currentView === 'community' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <LayoutDashboard className="w-4 h-4" />
-          <span>Scouts</span>
+          <Users className="w-4 h-4 text-indigo-400" />
+          <span>Community</span>
         </button>
       </div>
     </header>

@@ -14,6 +14,7 @@ import {
   Gauge
 } from 'lucide-react';
 import { Sport, AssessmentType } from '../../types';
+import { SPORTS_DATA } from '../../data/mockDatabase';
 
 interface DrillSelectionModalProps {
   sports: Sport[];
@@ -35,8 +36,9 @@ export const DrillSelectionModal: React.FC<DrillSelectionModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentSport = sports.find(s => s.id === selectedSportId) || sports[0];
-  const currentDrill = currentSport?.assessment_types.find(d => d.id === selectedDrillId) || currentSport?.assessment_types[0];
+  const activeSports = sports && sports.length > 0 ? sports : SPORTS_DATA;
+  const currentSport = activeSports.find(s => s.id === selectedSportId) || activeSports[0] || SPORTS_DATA[0];
+  const currentDrill = currentSport?.assessment_types?.find(d => d.id === selectedDrillId) || currentSport?.assessment_types?.[0];
 
   const getSportIcon = (iconName: string) => {
     switch (iconName) {
@@ -71,7 +73,7 @@ export const DrillSelectionModal: React.FC<DrillSelectionModalProps> = ({
           <div>
             <label className="text-xs font-mono uppercase text-slate-400 font-semibold mb-2.5 block">1. Choose Sport Discipline</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {sports.map(sport => {
+              {activeSports.map(sport => {
                 const isSelected = sport.id === selectedSportId;
                 return (
                   <button
@@ -102,10 +104,10 @@ export const DrillSelectionModal: React.FC<DrillSelectionModalProps> = ({
 
           {/* 2. Assessment Drill Selection */}
           <div>
-            <label className="text-xs font-mono uppercase text-slate-400 font-semibold mb-2.5 block">2. Standardized Drill Protocols ({currentSport.name})</label>
+            <label className="text-xs font-mono uppercase text-slate-400 font-semibold mb-2.5 block">2. Standardized Drill Protocols ({currentSport?.name || 'Football'})</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {currentSport.assessment_types.map(drill => {
-                const isSelected = (selectedDrillId || currentSport.assessment_types[0]?.id) === drill.id;
+              {(currentSport?.assessment_types || []).map(drill => {
+                const isSelected = (selectedDrillId || currentSport?.assessment_types?.[0]?.id) === drill.id;
                 return (
                   <div
                     key={drill.id}

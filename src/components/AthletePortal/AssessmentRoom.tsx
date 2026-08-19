@@ -11,18 +11,24 @@ import {
   HardDrive,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
+  UploadCloud,
   Database,
   Layers,
   Sparkles,
-  Info
+  Info,
+  Check
 } from 'lucide-react';
-import { Sport, AssessmentType, Assessment, VideoMetadata } from '../../types';
+import { Sport, AssessmentType, Assessment, VideoMetadata, GamificationEventResult } from '../../types';
+import { FileSizeAlertModal, FileSizeAlertDetails } from './FileSizeAlertModal';
+
+const DEFAULT_MAX_FILE_SIZE_MB = 50;
 
 interface AssessmentRoomProps {
   sport: Sport;
   drill: AssessmentType;
   onBack: () => void;
-  onAssessmentCompleted: (assessment: Assessment) => void;
+  onAssessmentCompleted: (assessment: Assessment, gamification?: GamificationEventResult) => void;
 }
 
 export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
@@ -39,6 +45,12 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
   const [uploadStatusText, setUploadStatusText] = useState('');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   
+  // Storage Limits
+  const [maxStorageMB, setMaxStorageMB] = useState<number>(DEFAULT_MAX_FILE_SIZE_MB);
+  const [fileSizeAlert, setFileSizeAlert] = useState<FileSizeAlertDetails | null>(null);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Real video metadata
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -48,6 +60,20 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+
+  // Fetch backend storage limits config
+  useEffect(() => {
+    fetch('/api/v1/storage/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.data?.max_file_size_mb) {
+          setMaxStorageMB(data.data.max_file_size_mb);
+        }
+      })
+      .catch(err => {
+        console.warn('Storage config fetch fallback:', err);
+      });
+  }, []);
 
   // Initialize webcam stream if supported
   useEffect(() => {
@@ -114,6 +140,11 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
 
         recorder.onstop = () => {
           const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          const blobSizeMB = Number((blob.size / (1024 * 1024)).toFixed(2));
+          if (blobSizeMB > maxStorageMB) {
+            triggerFileSizeAlert(`recorded_${drill.id}.webm`, blobSizeMB, maxStorageMB);
+            return;
+          }
           setRecordedBlob(blob);
           setVideoPreviewUrl(URL.createObjectURL(blob));
         };
@@ -136,42 +167,127 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
     }
   };
 
+  const triggerFileSizeAlert = (fileName: string, fileSizeMB: number, limitMB: number, customMessage?: string) => {
+    setFileSizeAlert({
+      fileName,
+      fileSizeMB,
+      maxLimitMB: limitMB,
+      message: customMessage || `The selected file size (${fileSizeMB} MB) exceeds the maximum allowed upload limit of ${limitMB} MB.`,
+      onSelectAnotherFile: () => {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+          fileInputRef.current.click();
+        }
+      },
+      onSwitchToCamera: () => {
+        setCameraMode('live_camera');
+        setVideoPreviewUrl(null);
+        setSelectedFile(null);
+        setRecordedBlob(null);
+      }
+    });
+    setIsAlertModalOpen(true);
+  };
+
+  const validateAndProcessFile = (file: File) => {
+    const fileSizeMB = Number((file.size / (1024 * 1024)).toFixed(2));
+    if (fileSizeMB > maxStorageMB) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setSelectedFile(null);
+      setVideoPreviewUrl(null);
+      triggerFileSizeAlert(file.name, fileSizeMB, maxStorageMB);
+      return false;
+    }
+
+    setSelectedFile(file);
+    setVideoPreviewUrl(URL.createObjectURL(file));
+    setCameraMode('upload_file');
+    return true;
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
-      setVideoPreviewUrl(URL.createObjectURL(file));
-      setCameraMode('upload_file');
+      validateAndProcessFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('video/') || file.name.match(/\.(mp4|webm|mov|mkv|avi)$/i)) {
+        validateAndProcessFile(file);
+      } else {
+        alert('Please select a valid video file (MP4, WebM, MOV).');
+      }
     }
   };
 
   const handleSubmitToStorageAndDatabase = async () => {
+    const fileName = selectedFile
+      ? selectedFile.name
+      : `recorded_${drill.id}_${Date.now()}.webm`;
+    const fileSize = selectedFile
+      ? selectedFile.size
+      : (recordedBlob?.size || 12400000);
+    const mimeType = selectedFile
+      ? selectedFile.type
+      : (recordedBlob?.type || 'video/webm');
+
+    const fileSizeMB = Number((fileSize / (1024 * 1024)).toFixed(2));
+
+    // Client-side pre-validation check
+    if (fileSizeMB > maxStorageMB) {
+      triggerFileSizeAlert(fileName, fileSizeMB, maxStorageMB);
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(10);
-    setUploadStatusText('Requesting Supabase Storage path & bucket allocation...');
+    setUploadStatusText('Verifying size constraints & requesting Supabase Storage path...');
 
     try {
-      const fileName = selectedFile
-        ? selectedFile.name
-        : `recorded_${drill.id}_${Date.now()}.webm`;
-      const fileSize = selectedFile
-        ? selectedFile.size
-        : (recordedBlob?.size || 12400000);
-      const mimeType = selectedFile
-        ? selectedFile.type
-        : (recordedBlob?.type || 'video/webm');
-
-      // 1. Request storage path / signed upload url
+      // 1. Request storage path / signed upload url with size validation payload
       const urlRes = await fetch('/api/v1/storage/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           file_name: fileName,
           file_type: mimeType,
+          file_size_bytes: fileSize,
           bucket: 'assessment-videos'
         })
       });
+
       const urlData = await urlRes.json();
+
+      if (!urlRes.ok || urlRes.status === 413 || urlData.success === false) {
+        setIsUploading(false);
+        const serverError = urlData.error?.message || 'File size exceeds allowed storage limits.';
+        const maxLimit = urlData.error?.details?.max_file_size_mb || maxStorageMB;
+        const currentMB = urlData.error?.details?.current_file_size_mb || fileSizeMB;
+        triggerFileSizeAlert(fileName, currentMB, maxLimit, serverError);
+        return;
+      }
+
       setUploadProgress(40);
       setUploadStatusText('Uploading video binary to Supabase Storage (bucket: assessment-videos)...');
 
@@ -207,6 +323,17 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
       });
 
       const createData = await createRes.json();
+
+      if (!createRes.ok || createData.success === false) {
+        setIsUploading(false);
+        if (createRes.status === 413) {
+          triggerFileSizeAlert(fileName, fileSizeMB, maxStorageMB, createData.error?.message);
+        } else {
+          alert(`Assessment registration notice: ${createData.message || createData.error || 'Please check storage configuration.'}`);
+        }
+        return;
+      }
+
       setUploadProgress(100);
       setUploadStatusText('Video verified in Supabase Storage. Assessment queued.');
 
@@ -214,21 +341,35 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
       setIsUploading(false);
 
       if (createData.success && createData.data?.assessment) {
-        onAssessmentCompleted(createData.data.assessment);
+        onAssessmentCompleted(createData.data.assessment, createData.data.gamification);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Storage upload or assessment creation failed:', error);
       setIsUploading(false);
-      alert('Error connecting to Supabase Storage. Please verify network or storage bucket permissions.');
+      alert('Error connecting to Supabase Storage. Please verify network connectivity and storage bucket configuration.');
     }
   };
 
+  const selectedFileMB = selectedFile
+    ? Number((selectedFile.size / (1024 * 1024)).toFixed(2))
+    : recordedBlob
+    ? Number((recordedBlob.size / (1024 * 1024)).toFixed(2))
+    : null;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      {/* File Size Limit Alert Modal */}
+      <FileSizeAlertModal
+        alert={fileSizeAlert}
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+      />
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button
+            id="back-to-dashboard-btn"
             onClick={onBack}
             className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
           >
@@ -241,6 +382,11 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
               <span className="text-xs font-mono uppercase bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">
                 {drill.category}
               </span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span className="text-[11px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 hidden sm:inline-flex items-center gap-1">
+                <HardDrive className="w-3 h-3 text-cyan-400" />
+                Max Size: {maxStorageMB}MB
+              </span>
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-white font-display mt-0.5">{drill.name}</h1>
           </div>
@@ -249,6 +395,7 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
         {/* Source Toggle */}
         <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs self-start sm:self-auto">
           <button
+            id="toggle-live-camera-mode-btn"
             onClick={() => {
               setCameraMode('live_camera');
               setVideoPreviewUrl(null);
@@ -263,7 +410,13 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
             Live Camera
           </button>
           <button
-            onClick={() => fileInputRef.current?.click()}
+            id="toggle-upload-file-mode-btn"
+            onClick={() => {
+              setCameraMode('upload_file');
+              if (!selectedFile && !videoPreviewUrl) {
+                fileInputRef.current?.click();
+              }
+            }}
             className={`px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
               cameraMode === 'upload_file'
                 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
@@ -274,9 +427,10 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
             Upload Video File
           </button>
           <input
+            id="assessment-video-file-input"
             ref={fileInputRef}
             type="file"
-            accept="video/*"
+            accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/avi"
             className="hidden"
             onChange={handleFileUpload}
           />
@@ -287,7 +441,17 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Real Camera Feed / Upload Player */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="relative aspect-video bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
+          <div
+            id="video-viewport-container"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative aspect-video bg-slate-950 border rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center transition-all ${
+              isDragging
+                ? 'border-cyan-400 bg-cyan-950/20 ring-2 ring-cyan-400/50'
+                : 'border-slate-800'
+            }`}
+          >
             {videoPreviewUrl ? (
               <video
                 src={videoPreviewUrl}
@@ -303,17 +467,22 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
                 className="w-full h-full object-cover transform scale-x-[-1]"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-900/60">
-                <FileCheck2 className="w-12 h-12 text-cyan-400 mb-2" />
-                <h4 className="text-sm font-semibold text-white">Select Video File to Upload</h4>
-                <p className="text-xs text-slate-400 mt-1 font-mono">
-                  {selectedFile ? selectedFile.name : 'MP4, MOV, or WEBM up to 100MB'}
-                </p>
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-900/60 space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center">
+                  <UploadCloud className="w-7 h-7 text-cyan-400" />
+                </div>
+                <div>
+                  <h4 className="text-sm sm:text-base font-semibold text-white">Drag and drop video here</h4>
+                  <p className="text-xs text-slate-400 mt-1 font-mono">
+                    Supported: MP4, WebM, MOV • Max limit: <strong className="text-cyan-400">{maxStorageMB}MB</strong>
+                  </p>
+                </div>
                 <button
+                  id="select-video-file-btn"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-3 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700"
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition-colors shadow-sm"
                 >
-                  Choose File
+                  Choose File from Computer
                 </button>
               </div>
             )}
@@ -346,32 +515,47 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
             )}
           </div>
 
-          {/* Action Bar */}
+          {/* Validation Feedback & Action Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-              <Clock className="w-4 h-4 text-cyan-400" />
-              <span>Target Duration: <strong>{drill.duration_sec}s</strong></span>
+            <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400 font-mono">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-cyan-400" />
+                <span>Target: <strong>{drill.duration_sec}s</strong></span>
+              </div>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-300">Storage: <strong className="text-cyan-400">Supabase Storage</strong></span>
+              {selectedFileMB ? (
+                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Size: {selectedFileMB} MB / {maxStorageMB} MB max</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-slate-400">
+                  <HardDrive className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Limit: <strong>{maxStorageMB} MB</strong></span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
               {videoPreviewUrl ? (
                 <div className="flex items-center gap-2">
                   <button
+                    id="retake-replace-video-btn"
                     onClick={() => {
                       setVideoPreviewUrl(null);
                       setRecordedBlob(null);
                       setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
                     }}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
                   >
                     Retake / Replace
                   </button>
                   <button
+                    id="submit-video-assessment-btn"
                     disabled={isUploading}
                     onClick={handleSubmitToStorageAndDatabase}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-transform active:scale-95"
                   >
                     <HardDrive className="w-4 h-4" />
                     Save & Queue Video
@@ -379,6 +563,7 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
                 </div>
               ) : !isRecording ? (
                 <button
+                  id="start-camera-recording-btn"
                   disabled={isUploading}
                   onClick={handleStartRecording}
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-transform active:scale-95"
@@ -388,8 +573,9 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
                 </button>
               ) : (
                 <button
+                  id="stop-camera-recording-btn"
                   onClick={handleStopRecording}
-                  className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-600/30 flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-600/30 flex items-center gap-2 transition-transform active:scale-95"
                 >
                   <Square className="w-4 h-4 fill-white" />
                   Stop & Review Video
@@ -399,7 +585,7 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
           </div>
         </div>
 
-        {/* Right Col: Standardized Protocol Instructions */}
+        {/* Right Col: Standardized Protocol Instructions & Storage Limits */}
         <div className="space-y-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <div>
@@ -431,13 +617,18 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs space-y-2 text-slate-400">
-            <div className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-              <Database className="w-4 h-4" />
-              <span>Supabase Storage & PostgreSQL Architecture</span>
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs space-y-2.5 text-slate-400">
+            <div className="flex items-center justify-between text-cyan-400 font-semibold">
+              <div className="flex items-center gap-1.5">
+                <Database className="w-4 h-4" />
+                <span>Storage & Size Validation</span>
+              </div>
+              <span className="font-mono text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30">
+                Max {maxStorageMB} MB
+              </span>
             </div>
             <p className="leading-relaxed text-[11px]">
-              Uploaded videos are securely persisted in Supabase Storage with signed paths. The attempt record is registered in PostgreSQL with full file metadata and status tracking.
+              Uploaded videos are verified on client and server before bucket upload. Files larger than {maxStorageMB}MB are rejected with recovery suggestions.
             </p>
           </div>
         </div>
@@ -445,3 +636,4 @@ export const AssessmentRoom: React.FC<AssessmentRoomProps> = ({
     </div>
   );
 };
+

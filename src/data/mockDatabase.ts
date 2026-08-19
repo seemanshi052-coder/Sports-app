@@ -1,4 +1,4 @@
-import { Sport, AthleteProfile, Assessment, LeaderboardItem, ScoutNote, PlatformStats } from '../types';
+import { Sport, AthleteProfile, Assessment, LeaderboardItem, ScoutNote, PlatformStats, Achievement } from '../types';
 
 export const SPORTS_DATA: Sport[] = [
   {
@@ -662,3 +662,293 @@ export const PLATFORM_STATS: PlatformStats = {
   scouts_active: 135,
   verified_talents: 380
 };
+
+export const INITIAL_ACHIEVEMENTS: Achievement[] = [
+  {
+    id: 'ach_1',
+    athlete_id: 'ath_1',
+    title: 'Regional U-18 Cup Winner & Top Scorer',
+    sport: 'football',
+    event_name: 'Greater Manchester Youth Championship',
+    date_achieved: '2026-05-18',
+    evidence_type: 'Digital Certificate',
+    certificate_url: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80',
+    verification_status: 'verified',
+    verified_by: 'Manchester District FA',
+    verified_at: '2026-05-22T10:00:00Z',
+    notes: 'Awarded Golden Boot (14 goals in 8 matches) and Tournament MVP.'
+  },
+  {
+    id: 'ach_2',
+    athlete_id: 'ath_1',
+    title: 'County Athletics 100m Sprint Silver Medal',
+    sport: 'athletics',
+    event_name: 'North West Schools Track Meet',
+    date_achieved: '2026-06-04',
+    evidence_type: 'Competition Result',
+    certificate_url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&auto=format&fit=crop&q=80',
+    verification_status: 'verified',
+    verified_by: 'County Athletics Board',
+    verified_at: '2026-06-10T14:30:00Z',
+    notes: 'Clocked official electronic timing 10.92s in U-19 final.'
+  }
+];
+
+export const INITIAL_COMMUNITY_POSTS = [
+  {
+    id: 'post_1',
+    author_id: 'user_ath_1',
+    author_name: 'Marcus Vance',
+    author_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    author_level: 4,
+    author_level_name: 'State Finalist',
+    author_level_icon: '⚡',
+    author_badge: 'Acceleration Virtuoso',
+    post_type: 'ACHIEVEMENT' as const,
+    sport: 'football',
+    title: 'New Personal Best on 20m Acceleration Sprint!',
+    content: 'Just completed my verified video assessment on the 20m Acceleration Sprint. Dropped my 0-10m split time to 1.62s and hit 32.4 km/h peak speed! The biomechanical feedback on torso forward lean during the drive phase made a huge difference.',
+    media_url: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80',
+    media_type: 'image' as const,
+    like_count: 38,
+    comment_count: 5,
+    liked_by_current_user: false,
+    created_at: '2026-08-18T09:30:00Z',
+    updated_at: '2026-08-18T09:30:00Z'
+  },
+  {
+    id: 'post_2',
+    author_id: 'user_ath_2',
+    author_name: 'Elena Rostova',
+    author_avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    author_level: 5,
+    author_level_name: 'National Prodigy',
+    author_level_icon: '🌟',
+    author_badge: 'Sub-11 Vanguard',
+    post_type: 'TRAINING' as const,
+    sport: 'athletics',
+    title: 'Plyometric Hurdle Bounds & Ground Contact Efficiency',
+    content: 'Focusing heavily this week on decreasing ground contact time on high-speed transitions. Mediapipe analysis showed my stride cadence reached 4.82 steps/second on my latest 100m sprint. Consistency every single day compounds!',
+    media_url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&auto=format&fit=crop&q=80',
+    media_type: 'image' as const,
+    like_count: 64,
+    comment_count: 8,
+    liked_by_current_user: true,
+    created_at: '2026-08-17T16:45:00Z',
+    updated_at: '2026-08-17T16:45:00Z'
+  },
+  {
+    id: 'post_3',
+    author_id: 'user_ath_3',
+    author_name: 'David Chen',
+    author_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    author_level: 3,
+    author_level_name: 'Regional Contender',
+    author_level_icon: '🔥',
+    author_badge: 'Apex Leaper',
+    post_type: 'QUESTION' as const,
+    sport: 'basketball',
+    title: 'Countermovement Jump: Arm swing timing tips?',
+    content: 'Looking for coaching tips on optimizing arm-swing eccentric loading right before takeoff on the vertical jump assessment. My countermovement depth is around 78 degrees at the knee, but I feel like I might be losing peak ground reaction force on the upswing. Any recommendations from track or basketball coaches here?',
+    like_count: 19,
+    comment_count: 6,
+    liked_by_current_user: false,
+    created_at: '2026-08-16T14:10:00Z',
+    updated_at: '2026-08-16T14:10:00Z'
+  },
+  {
+    id: 'post_4',
+    author_id: 'user_ath_4',
+    author_name: 'Amara Okafor',
+    author_avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80',
+    author_level: 4,
+    author_level_name: 'State Finalist',
+    author_level_icon: '⚡',
+    author_badge: 'Agility Maestro',
+    post_type: 'PROGRESS' as const,
+    sport: 'tennis',
+    title: 'Spider Drill: 14.8s benchmark broken!',
+    content: 'After 3 weeks of deceleration drills and lower hip positioning at the court boundary lines, my change-of-direction recovery latency dropped below 0.38 seconds. Grateful for the objective video benchmark feedback on The Elitez!',
+    media_url: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=800&auto=format&fit=crop&q=80',
+    media_type: 'image' as const,
+    like_count: 47,
+    comment_count: 4,
+    liked_by_current_user: false,
+    created_at: '2026-08-15T18:20:00Z',
+    updated_at: '2026-08-15T18:20:00Z'
+  }
+];
+
+export const INITIAL_POST_COMMENTS = [
+  {
+    id: 'comm_1',
+    post_id: 'post_1',
+    author_id: 'user_ath_2',
+    author_name: 'Elena Rostova',
+    author_avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    author_level: 5,
+    author_level_name: 'National Prodigy',
+    author_level_icon: '🌟',
+    content: 'Huge progress Marcus! Sustaining the 45-degree angle in the first 3 steps is everything for sub-1.7s splits.',
+    created_at: '2026-08-18T10:05:00Z'
+  },
+  {
+    id: 'comm_2',
+    post_id: 'post_1',
+    author_id: 'user_scout_1',
+    author_name: 'Sarah Jenkins (Scout)',
+    author_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    author_level: 6,
+    author_level_name: 'Elite Master',
+    author_level_icon: '🏆',
+    content: 'The video mechanics look very clean on the deceleration taper too. Keep up the high standard.',
+    created_at: '2026-08-18T10:45:00Z'
+  },
+  {
+    id: 'comm_3',
+    post_id: 'post_3',
+    author_id: 'user_ath_1',
+    author_name: 'Marcus Vance',
+    author_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    author_level: 4,
+    author_level_name: 'State Finalist',
+    author_level_icon: '⚡',
+    content: 'Try initiating the downswing slightly before your knees reach maximum flexion. That pre-stretches the posterior chain and gives an extra 2-3 inches!',
+    created_at: '2026-08-16T15:20:00Z'
+  }
+];
+
+export const INITIAL_OPPORTUNITIES = [
+  {
+    id: 'opp_1',
+    title: 'National U-19 Football Elite Scouting Trials 2026',
+    description: 'Annual premier scouting trials conducted by the National Development Football Federation. Top 30 selected athletes will receive full-tuition residential academy scholarships and direct pathway into division-1 youth reserves.',
+    organization_name: 'National Youth Football Development Board',
+    organization_logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=150&auto=format&fit=crop&q=80',
+    opportunity_type: 'TRIAL' as const,
+    sport: 'football',
+    location: 'National Sports Complex, Manchester, UK',
+    is_remote: false,
+    start_date: '2026-09-18T09:00:00Z',
+    end_date: '2026-09-20T17:00:00Z',
+    application_deadline: '2026-09-10T23:59:59Z',
+    eligibility: 'Athletes born between 2008 and 2010. Must submit at least 2 verified video assessments on The Elitez platform.',
+    requirements: [
+      'Verified 20m sprint assessment score above 80',
+      'Valid medical fitness clearance certificate',
+      'National youth registration number'
+    ],
+    benefits: [
+      'Full 2-year residential sports academy scholarship',
+      'UEFA-licensed coaching staff evaluation',
+      'Live showcase in front of premier league scouts'
+    ],
+    registration_url: 'https://theelitez.org/trials/football-u19-national',
+    contact_email: 'trials@nationalfootballboard.org',
+    contact_phone: '+44 161 820 4099',
+    status: 'VERIFIED' as const,
+    is_verified: true,
+    created_by: 'admin_official',
+    created_at: '2026-08-01T10:00:00Z',
+    updated_at: '2026-08-15T12:00:00Z'
+  },
+  {
+    id: 'opp_2',
+    title: 'State Sprint & Hurdle Athletics Championship 2026',
+    description: 'Official state-level qualifying tournament for the National Athletics Games. All standard track sprint events (100m, 200m, 400m, 110m hurdles) with electronic timing gates and anti-doping accreditation.',
+    organization_name: 'Athletics Federation State Chapter',
+    organization_logo: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=150&auto=format&fit=crop&q=80',
+    opportunity_type: 'COMPETITION' as const,
+    sport: 'athletics',
+    location: 'Olympic Stadium, London, UK',
+    is_remote: false,
+    start_date: '2026-09-26T08:00:00Z',
+    end_date: '2026-09-27T19:00:00Z',
+    application_deadline: '2026-09-15T23:59:59Z',
+    eligibility: 'U-18 and U-21 male & female track athletes with club/school affiliation.',
+    requirements: [
+      'Official verified 100m or 200m qualifying standard entry',
+      'State Athletics ID card',
+      'Entry registration fee waiver for verified top-10 leaderboard athletes'
+    ],
+    benefits: [
+      'Official qualification points for National Games',
+      'Medals, trophies, and athletic gear sponsorships',
+      'Recorded multi-angle video archive'
+    ],
+    registration_url: 'https://stateathletics.org/championships-2026',
+    contact_email: 'events@stateathletics.org',
+    contact_phone: '+44 20 7946 0912',
+    status: 'VERIFIED' as const,
+    is_verified: true,
+    created_by: 'admin_official',
+    created_at: '2026-08-05T09:00:00Z',
+    updated_at: '2026-08-16T11:00:00Z'
+  },
+  {
+    id: 'opp_3',
+    title: 'High Performance Basketball Combine & Scholarship Camp',
+    description: 'Intensive 4-day athletic combine and skills showcase for aspiring collegiate and pro basketball athletes. Features NBA draft combine testing protocols: standing vertical, lane agility, 3/4 court sprint, and scrimmage play.',
+    organization_name: 'Apex Hoops Global Academy',
+    organization_logo: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=150&auto=format&fit=crop&q=80',
+    opportunity_type: 'CAMP' as const,
+    sport: 'basketball',
+    location: 'National Basketball Performance Arena, Birmingham, UK',
+    is_remote: false,
+    start_date: '2026-10-02T10:00:00Z',
+    end_date: '2026-10-05T18:00:00Z',
+    application_deadline: '2026-09-22T23:59:59Z',
+    eligibility: 'Ages 16-22 with verified high school, club, or collegiate basketball experience.',
+    requirements: [
+      'Minimum standing reach 7ft 6in or verified vertical jump > 26 inches',
+      'Letter of recommendation from club coach or verified Elitez profile'
+    ],
+    benefits: [
+      'Direct exposure to 20+ NCAA and European club scouts',
+      'Complete biomechanical combine performance profile',
+      'Top 3 MVP awards with collegiate scholarship recommendations'
+    ],
+    registration_url: 'https://apexhoops.org/combine-2026',
+    contact_email: 'combine@apexhoops.org',
+    contact_phone: '+44 121 496 0300',
+    status: 'VERIFIED' as const,
+    is_verified: true,
+    created_by: 'admin_official',
+    created_at: '2026-08-08T14:00:00Z',
+    updated_at: '2026-08-17T10:00:00Z'
+  },
+  {
+    id: 'opp_4',
+    title: 'Youth Tennis Future Champions Scholarship 2026-2027',
+    description: 'Fully funded annual scholarship grant including year-round court time, tournament travel grants, and personalized conditioning coaching for talented junior tennis athletes.',
+    organization_name: 'International Tennis Heritage Foundation',
+    organization_logo: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=150&auto=format&fit=crop&q=80',
+    opportunity_type: 'SCHOLARSHIP' as const,
+    sport: 'tennis',
+    location: 'National Tennis Center, London, UK',
+    is_remote: false,
+    start_date: '2026-11-01T08:00:00Z',
+    end_date: '2027-10-31T18:00:00Z',
+    application_deadline: '2026-10-01T23:59:59Z',
+    eligibility: 'Junior players aged 14-19 with verified national or regional tournament ranking.',
+    requirements: [
+      'ITF / National ranking certification',
+      'Video assessment submissions on Serve Velocity and Spider Agility Drill',
+      'Academic progress report'
+    ],
+    benefits: [
+      '£18,000 annual tournament travel and training endowment',
+      'Dedicated strength & conditioning coach',
+      'Sponsorship equipment package'
+    ],
+    registration_url: 'https://tennis-heritage-foundation.org/scholarship-2026',
+    contact_email: 'grants@tennis-heritage-foundation.org',
+    contact_phone: '+44 20 8946 2244',
+    status: 'VERIFIED' as const,
+    is_verified: true,
+    created_by: 'admin_official',
+    created_at: '2026-08-10T12:00:00Z',
+    updated_at: '2026-08-18T08:00:00Z'
+  }
+];
+

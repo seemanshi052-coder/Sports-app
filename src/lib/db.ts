@@ -1,6 +1,14 @@
 import { Pool } from 'pg';
-import { AthleteProfile, Assessment, ScoutNote, User, Sport } from '../types';
-import { SPORTS_DATA, INITIAL_ATHLETES, INITIAL_ASSESSMENTS, INITIAL_SCOUT_NOTES } from '../data/mockDatabase';
+import { AthleteProfile, Assessment, ScoutNote, User, Sport, CommunityPost, Opportunity } from '../types';
+import {
+  SPORTS_DATA,
+  INITIAL_ATHLETES,
+  INITIAL_ASSESSMENTS,
+  INITIAL_SCOUT_NOTES,
+  INITIAL_COMMUNITY_POSTS,
+  INITIAL_POST_COMMENTS,
+  INITIAL_OPPORTUNITIES
+} from '../data/mockDatabase';
 
 let pool: Pool | null = null;
 
@@ -120,6 +128,156 @@ export async function initializeDatabaseSchema(): Promise<boolean> {
           tags JSONB,
           created_at TIMESTAMPTZ DEFAULT NOW()
         );
+
+        CREATE TABLE IF NOT EXISTS xp_transactions (
+          id VARCHAR(128) PRIMARY KEY,
+          user_id VARCHAR(128) NOT NULL,
+          amount INT NOT NULL,
+          source_type VARCHAR(64) NOT NULL,
+          source_id VARCHAR(128) NOT NULL,
+          description TEXT NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          CONSTRAINT uq_user_source UNIQUE (user_id, source_type, source_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS badges (
+          id VARCHAR(128) PRIMARY KEY,
+          code VARCHAR(64) UNIQUE NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          description TEXT NOT NULL,
+          icon VARCHAR(64) NOT NULL,
+          category VARCHAR(64) NOT NULL,
+          requirement_type VARCHAR(64) NOT NULL,
+          requirement_value INT NOT NULL,
+          xp_reward INT DEFAULT 0,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS user_badges (
+          id VARCHAR(128) PRIMARY KEY,
+          user_id VARCHAR(128) NOT NULL,
+          badge_id VARCHAR(128) NOT NULL,
+          badge_code VARCHAR(64) NOT NULL,
+          unlocked_at TIMESTAMPTZ DEFAULT NOW(),
+          trigger_value NUMERIC(10,2),
+          source_reference VARCHAR(128),
+          CONSTRAINT uq_user_badge UNIQUE (user_id, badge_code)
+        );
+
+        CREATE TABLE IF NOT EXISTS user_streaks (
+          user_id VARCHAR(128) PRIMARY KEY,
+          current_streak INT DEFAULT 0,
+          longest_streak INT DEFAULT 0,
+          last_activity_date DATE,
+          activity_dates JSONB DEFAULT '[]',
+          claimed_milestones JSONB DEFAULT '[]',
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- Community & Opportunities Tables
+        CREATE TABLE IF NOT EXISTS community_posts (
+          id VARCHAR(128) PRIMARY KEY,
+          author_id VARCHAR(128) NOT NULL,
+          author_name VARCHAR(255) NOT NULL,
+          author_avatar TEXT,
+          author_level INT DEFAULT 1,
+          author_level_name VARCHAR(128),
+          author_level_icon VARCHAR(32),
+          author_badge VARCHAR(128),
+          post_type VARCHAR(64) NOT NULL,
+          sport VARCHAR(64),
+          title VARCHAR(255),
+          content TEXT NOT NULL,
+          media_url TEXT,
+          media_type VARCHAR(32),
+          like_count INT DEFAULT 0,
+          comment_count INT DEFAULT 0,
+          is_deleted BOOLEAN DEFAULT FALSE,
+          is_hidden BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_comm_posts_created_at ON community_posts(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_comm_posts_author ON community_posts(author_id);
+        CREATE INDEX IF NOT EXISTS idx_comm_posts_type ON community_posts(post_type);
+
+        CREATE TABLE IF NOT EXISTS post_likes (
+          id VARCHAR(128) PRIMARY KEY,
+          post_id VARCHAR(128) NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+          user_id VARCHAR(128) NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          CONSTRAINT uq_post_like UNIQUE (post_id, user_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_post_likes_post ON post_likes(post_id);
+        CREATE INDEX IF NOT EXISTS idx_post_likes_user ON post_likes(user_id);
+
+        CREATE TABLE IF NOT EXISTS post_comments (
+          id VARCHAR(128) PRIMARY KEY,
+          post_id VARCHAR(128) NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+          author_id VARCHAR(128) NOT NULL,
+          author_name VARCHAR(255) NOT NULL,
+          author_avatar TEXT,
+          author_level INT DEFAULT 1,
+          author_level_name VARCHAR(128),
+          author_level_icon VARCHAR(32),
+          content TEXT NOT NULL,
+          is_deleted BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_post_comments_post ON post_comments(post_id);
+
+        CREATE TABLE IF NOT EXISTS community_reports (
+          id VARCHAR(128) PRIMARY KEY,
+          reporter_id VARCHAR(128) NOT NULL,
+          target_type VARCHAR(32) NOT NULL,
+          target_id VARCHAR(128) NOT NULL,
+          reason VARCHAR(64) NOT NULL,
+          details TEXT,
+          status VARCHAR(32) DEFAULT 'PENDING',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_comm_reports_target ON community_reports(target_type, target_id);
+
+        CREATE TABLE IF NOT EXISTS opportunities (
+          id VARCHAR(128) PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          description TEXT NOT NULL,
+          organization_name VARCHAR(255) NOT NULL,
+          organization_logo TEXT,
+          opportunity_type VARCHAR(64) NOT NULL,
+          sport VARCHAR(64) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          is_remote BOOLEAN DEFAULT FALSE,
+          start_date TIMESTAMPTZ,
+          end_date TIMESTAMPTZ,
+          application_deadline TIMESTAMPTZ NOT NULL,
+          eligibility TEXT,
+          requirements JSONB DEFAULT '[]',
+          benefits JSONB DEFAULT '[]',
+          registration_url TEXT,
+          contact_email VARCHAR(255),
+          contact_phone VARCHAR(64),
+          created_by VARCHAR(128) DEFAULT 'admin_official',
+          status VARCHAR(32) DEFAULT 'VERIFIED',
+          is_verified BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_opp_deadline ON opportunities(application_deadline);
+        CREATE INDEX IF NOT EXISTS idx_opp_sport ON opportunities(sport);
+        CREATE INDEX IF NOT EXISTS idx_opp_type ON opportunities(opportunity_type);
+        CREATE INDEX IF NOT EXISTS idx_opp_status ON opportunities(status);
+
+        CREATE TABLE IF NOT EXISTS saved_opportunities (
+          id VARCHAR(128) PRIMARY KEY,
+          user_id VARCHAR(128) NOT NULL,
+          opportunity_id VARCHAR(128) NOT NULL REFERENCES opportunities(id) ON DELETE CASCADE,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          CONSTRAINT uq_user_opp UNIQUE (user_id, opportunity_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_saved_opp_user ON saved_opportunities(user_id);
       `);
 
       // 2. Check if sports catalog is empty, seed initial standardized sports & drills
@@ -173,6 +331,67 @@ export async function initializeDatabaseSchema(): Promise<boolean> {
             JSON.stringify(asm.raw_measurements || {}), JSON.stringify(asm.biomechanics || {}),
             JSON.stringify(asm.strengths || []), JSON.stringify(asm.improvement_areas || []),
             JSON.stringify(asm.recommendations || []), asm.model_version, asm.created_at, asm.updated_at
+          ]);
+        }
+      }
+
+      // Check if community_posts is empty, seed initial posts
+      const { rows: postRows } = await client.query('SELECT COUNT(*) FROM community_posts');
+      if (parseInt(postRows[0].count, 10) === 0) {
+        for (const post of INITIAL_COMMUNITY_POSTS) {
+          await client.query(`
+            INSERT INTO community_posts (
+              id, author_id, author_name, author_avatar, author_level,
+              author_level_name, author_level_icon, author_badge, post_type,
+              sport, title, content, media_url, media_type, like_count,
+              comment_count, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+            ON CONFLICT (id) DO NOTHING
+          `, [
+            post.id, post.author_id, post.author_name, post.author_avatar, post.author_level,
+            post.author_level_name, post.author_level_icon, post.author_badge, post.post_type,
+            post.sport, post.title, post.content, post.media_url, post.media_type, post.like_count,
+            post.comment_count, post.created_at, post.updated_at
+          ]);
+        }
+      }
+
+      // Check if post_comments is empty, seed initial comments
+      const { rows: commRows } = await client.query('SELECT COUNT(*) FROM post_comments');
+      if (parseInt(commRows[0].count, 10) === 0) {
+        for (const comm of INITIAL_POST_COMMENTS) {
+          await client.query(`
+            INSERT INTO post_comments (
+              id, post_id, author_id, author_name, author_avatar, author_level,
+              author_level_name, author_level_icon, content, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (id) DO NOTHING
+          `, [
+            comm.id, comm.post_id, comm.author_id, comm.author_name, comm.author_avatar, comm.author_level,
+            comm.author_level_name, comm.author_level_icon, comm.content, comm.created_at, comm.created_at
+          ]);
+        }
+      }
+
+      // Check if opportunities is empty, seed initial opportunities
+      const { rows: oppRows } = await client.query('SELECT COUNT(*) FROM opportunities');
+      if (parseInt(oppRows[0].count, 10) === 0) {
+        for (const opp of INITIAL_OPPORTUNITIES) {
+          await client.query(`
+            INSERT INTO opportunities (
+              id, title, description, organization_name, organization_logo,
+              opportunity_type, sport, location, is_remote, start_date, end_date,
+              application_deadline, eligibility, requirements, benefits,
+              registration_url, contact_email, contact_phone, created_by,
+              status, is_verified, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            ON CONFLICT (id) DO NOTHING
+          `, [
+            opp.id, opp.title, opp.description, opp.organization_name, opp.organization_logo,
+            opp.opportunity_type, opp.sport, opp.location, opp.is_remote, opp.start_date, opp.end_date,
+            opp.application_deadline, opp.eligibility, JSON.stringify(opp.requirements || []),
+            JSON.stringify(opp.benefits || []), opp.registration_url, opp.contact_email, opp.contact_phone,
+            opp.created_by, opp.status, opp.is_verified, opp.created_at, opp.updated_at
           ]);
         }
       }

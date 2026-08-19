@@ -171,7 +171,7 @@ export const ScoutOverview: React.FC<ScoutOverviewProps> = ({ sports }) => {
               className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
             >
               <option value="all">All Sports</option>
-              {sports.map(s => (
+              {(sports || []).map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>

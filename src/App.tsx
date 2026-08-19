@@ -5,22 +5,23 @@ import { DrillSelectionModal } from './components/AthletePortal/DrillSelectionMo
 import { AssessmentRoom } from './components/AthletePortal/AssessmentRoom';
 import { AssessmentResultView } from './components/AthletePortal/AssessmentResultView';
 import { LeaderboardView } from './components/AthletePortal/LeaderboardView';
-import { ScoutOverview } from './components/ScoutDashboard/ScoutOverview';
-import { Sport, AssessmentType, Assessment, UserRole } from './types';
+import { CommunityHub } from './components/Community/CommunityHub';
+import { SPORTS_DATA } from './data/mockDatabase';
+import { Sport, AssessmentType, Assessment, GamificationEventResult } from './types';
 
 export default function App() {
-  const [userRole, setUserRole] = useState<UserRole>('athlete');
   const [currentView, setCurrentView] = useState<
-    'athlete_dashboard' | 'assessment_room' | 'assessment_result' | 'leaderboard' | 'scout_dashboard'
+    'athlete_dashboard' | 'assessment_room' | 'assessment_result' | 'leaderboard' | 'community'
   >('athlete_dashboard');
 
-  const [sports, setSports] = useState<Sport[]>([]);
+  const [sports, setSports] = useState<Sport[]>(SPORTS_DATA);
   const [activeSportId, setActiveSportId] = useState<string>('football');
   const [isDrillSelectorOpen, setIsDrillSelectorOpen] = useState(false);
 
-  const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
-  const [selectedDrill, setSelectedDrill] = useState<AssessmentType | null>(null);
+  const [selectedSport, setSelectedSport] = useState<Sport | null>(SPORTS_DATA[0]);
+  const [selectedDrill, setSelectedDrill] = useState<AssessmentType | null>(SPORTS_DATA[0]?.assessment_types?.[0] || null);
   const [activeAssessmentResult, setActiveAssessmentResult] = useState<Assessment | null>(null);
+  const [activeGamificationResult, setActiveGamificationResult] = useState<GamificationEventResult | null>(null);
 
   useEffect(() => {
     fetchSportsCatalog();
@@ -32,40 +33,31 @@ export default function App() {
       const json = await res.json();
       if (json.success && json.data && json.data.length > 0) {
         setSports(json.data);
-        setSelectedSport(json.data[0]);
-        if (json.data[0].assessment_types?.length > 0) {
+        if (!selectedSport) {
+          setSelectedSport(json.data[0]);
+        }
+        if (!selectedDrill && json.data[0].assessment_types?.length > 0) {
           setSelectedDrill(json.data[0].assessment_types[0]);
         }
       }
     } catch (e) {
-      console.error('Failed to load sports catalog from REST API:', e);
+      console.warn('Failed to load sports catalog from REST API, using default catalog:', e);
     }
   };
 
   const handleStartDrill = (sport?: Sport, drill?: AssessmentType) => {
-    if (sport && drill) {
-      setSelectedSport(sport);
-      setSelectedDrill(drill);
-    } else if (sports.length > 0) {
-      setSelectedSport(sports[0]);
-      setSelectedDrill(sports[0].assessment_types?.[0] || null);
-    }
+    const targetSport = sport || selectedSport || sports[0] || SPORTS_DATA[0];
+    const targetDrill = drill || selectedDrill || targetSport?.assessment_types?.[0] || SPORTS_DATA[0].assessment_types[0];
+    setSelectedSport(targetSport);
+    setSelectedDrill(targetDrill);
     setIsDrillSelectorOpen(false);
     setCurrentView('assessment_room');
   };
 
-  const handleAssessmentCompleted = (assessment: Assessment) => {
+  const handleAssessmentCompleted = (assessment: Assessment, gamification?: GamificationEventResult) => {
     setActiveAssessmentResult(assessment);
+    setActiveGamificationResult(gamification || null);
     setCurrentView('assessment_result');
-  };
-
-  const handleSwitchRole = (newRole: UserRole) => {
-    setUserRole(newRole);
-    if (newRole === 'scout') {
-      setCurrentView('scout_dashboard');
-    } else {
-      setCurrentView('athlete_dashboard');
-    }
   };
 
   return (
@@ -74,10 +66,6 @@ export default function App() {
       <Navbar
         currentView={currentView}
         onNavigate={(view) => setCurrentView(view)}
-        userRole={userRole}
-        onSwitchRole={handleSwitchRole}
-        activeSport={activeSportId}
-        onSelectSport={setActiveSportId}
         onStartNewAssessment={() => setIsDrillSelectorOpen(true)}
       />
 
@@ -90,6 +78,7 @@ export default function App() {
             onOpenDrillSelector={() => setIsDrillSelectorOpen(true)}
             onViewAssessmentResult={(asm) => {
               setActiveAssessmentResult(asm);
+              setActiveGamificationResult(null);
               setCurrentView('assessment_result');
             }}
             onViewLeaderboard={() => setCurrentView('leaderboard')}
@@ -108,6 +97,7 @@ export default function App() {
         {currentView === 'assessment_result' && activeAssessmentResult && (
           <AssessmentResultView
             assessment={activeAssessmentResult}
+            gamification={activeGamificationResult}
             onRetake={() => handleStartDrill(selectedSport || undefined, selectedDrill || undefined)}
             onViewLeaderboard={() => setCurrentView('leaderboard')}
             onBackToDashboard={() => setCurrentView('athlete_dashboard')}
@@ -117,15 +107,13 @@ export default function App() {
         {currentView === 'leaderboard' && (
           <LeaderboardView
             sports={sports}
-            onSelectAthleteForScout={(athId) => {
-              setUserRole('scout');
-              setCurrentView('scout_dashboard');
-            }}
           />
         )}
 
-        {currentView === 'scout_dashboard' && (
-          <ScoutOverview sports={sports} />
+        {currentView === 'community' && (
+          <CommunityHub
+            sports={sports}
+          />
         )}
       </main>
 

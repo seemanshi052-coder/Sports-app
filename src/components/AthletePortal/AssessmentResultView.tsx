@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -13,7 +13,12 @@ import {
   FileCheck2,
   ShieldCheck,
   Activity,
-  Play
+  Play,
+  Sparkles,
+  Flame,
+  Zap,
+  Trophy,
+  Award
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -23,10 +28,13 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { Assessment } from '../../types';
+import { Assessment, GamificationEventResult, BadgeWithStatus } from '../../types';
+import { LevelUpModal } from './LevelUpModal';
+import { GamificationBadgeModal } from './GamificationBadgeModal';
 
 interface AssessmentResultViewProps {
   assessment: Assessment;
+  gamification?: GamificationEventResult | null;
   onRetake: () => void;
   onViewLeaderboard: () => void;
   onBackToDashboard: () => void;
@@ -34,10 +42,16 @@ interface AssessmentResultViewProps {
 
 export const AssessmentResultView: React.FC<AssessmentResultViewProps> = ({
   assessment,
+  gamification,
   onRetake,
   onViewLeaderboard,
   onBackToDashboard
 }) => {
+  const [showLevelUpModal, setShowLevelUpModal] = useState<boolean>(
+    Boolean(gamification?.level_up)
+  );
+  const [selectedBadge, setSelectedBadge] = useState<BadgeWithStatus | null>(null);
+
   const isPendingProcessing = assessment.status === 'created' || assessment.status === 'uploading' || assessment.status === 'uploaded' || assessment.status === 'queued';
 
   const metrics = assessment.metrics;
@@ -50,6 +64,25 @@ export const AssessmentResultView: React.FC<AssessmentResultViewProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      {/* Level Up Celebratory Modal */}
+      {showLevelUpModal && gamification?.level_up && (
+        <LevelUpModal
+          level={gamification.new_level || gamification.current_level}
+          levelName={gamification.new_level_name || gamification.level_name}
+          levelIcon={gamification.level_icon}
+          totalXp={gamification.total_xp}
+          onClose={() => setShowLevelUpModal(false)}
+        />
+      )}
+
+      {/* Selected Badge Inspector Modal */}
+      {selectedBadge && (
+        <GamificationBadgeModal
+          badge={selectedBadge}
+          onClose={() => setSelectedBadge(null)}
+        />
+      )}
+
       {/* Top Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -66,6 +99,12 @@ export const AssessmentResultView: React.FC<AssessmentResultViewProps> = ({
               }`}>
                 ● Status: {assessment.status.toUpperCase()}
               </span>
+              {gamification && (
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5 animate-pulse">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  +{gamification.xp_earned} XP Awarded
+                </span>
+              )}
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-display tracking-tight">
@@ -110,6 +149,115 @@ export const AssessmentResultView: React.FC<AssessmentResultViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Gamification Milestone & Rewards Section */}
+      {gamification && (
+        <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20 border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl shadow-lg">
+                {gamification.level_icon}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs uppercase font-bold text-amber-400 font-mono">
+                    Level {gamification.current_level} — {gamification.level_name}
+                  </span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-xs text-orange-400 font-bold flex items-center gap-1">
+                    <Flame className="w-3.5 h-3.5 fill-orange-400" />
+                    {gamification.current_streak} Day Streak
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-white font-display">
+                  {gamification.personal_best ? '🌟 New Personal Best Achieved!' : gamification.improvement_detected ? '📈 Performance Improvement Recorded!' : '🎯 Drill Successfully Evaluated!'}
+                </h3>
+              </div>
+            </div>
+
+            <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-2xl flex items-center gap-3">
+              <span className="text-xs text-slate-400">Total Authoritative XP</span>
+              <span className="text-xl font-black text-amber-400 font-mono">
+                {gamification.total_xp.toLocaleString()} XP
+              </span>
+            </div>
+          </div>
+
+          <p className="text-sm text-slate-300 leading-relaxed">
+            {gamification.motivational_message}
+          </p>
+
+          {/* XP Breakdown Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-400 uppercase font-mono block">Assessment Base</span>
+              <span className="text-sm font-bold text-cyan-400 font-mono">+100 XP</span>
+              <span className="text-[10px] text-slate-500 block">Verified drill attempt</span>
+            </div>
+
+            <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-400 uppercase font-mono block">Personal Best Bonus</span>
+              <span className="text-sm font-bold text-amber-400 font-mono">
+                {gamification.personal_best ? '+150 XP' : '0 XP'}
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                {gamification.personal_best ? 'New drill score high!' : 'Standard benchmark'}
+              </span>
+            </div>
+
+            <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-400 uppercase font-mono block">Improvement Surge</span>
+              <span className="text-sm font-bold text-emerald-400 font-mono">
+                {gamification.improvement_detected ? '+200 XP' : '0 XP'}
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                {gamification.improvement_detected ? `${gamification.improvement_percentage > 0 ? `+${gamification.improvement_percentage}%` : ''} trajectory up` : 'Consistent output'}
+              </span>
+            </div>
+
+            <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+              <span className="text-[10px] text-slate-400 uppercase font-mono block">Badges Unlocked</span>
+              <span className="text-sm font-bold text-purple-400 font-mono">
+                +{gamification.new_badges.reduce((sum: number, b) => sum + (b.xp_reward || 0), 0)} XP
+              </span>
+              <span className="text-[10px] text-slate-500 block">
+                {gamification.new_badges.length} new milestone{gamification.new_badges.length === 1 ? '' : 's'}
+              </span>
+            </div>
+          </div>
+
+          {/* Newly Unlocked Badges Showcase */}
+          {gamification.new_badges.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <span className="text-xs uppercase font-bold text-amber-400 font-mono block flex items-center gap-1.5">
+                <Trophy className="w-4 h-4" />
+                Newly Unlocked Badges in this Session
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {gamification.new_badges.map(badge => (
+                  <div
+                    key={badge.id}
+                    onClick={() => setSelectedBadge({ ...badge, unlocked: true, unlocked_at: new Date().toISOString() })}
+                    className="p-3.5 bg-slate-950/80 border border-amber-500/40 hover:border-amber-400 rounded-2xl flex items-center gap-3 cursor-pointer transition transform hover:scale-[1.02]"
+                  >
+                    <div className="text-3xl p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      {badge.icon}
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-white flex items-center gap-1">
+                        {badge.name}
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
+                      <p className="text-[11px] text-slate-400 line-clamp-1">{badge.description}</p>
+                      <span className="text-[10px] font-bold text-amber-400 font-mono">+{badge.xp_reward} XP</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Video Storage & Metadata Card */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
