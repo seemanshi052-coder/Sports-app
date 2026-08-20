@@ -77,7 +77,6 @@ async def create_assessment_record(
         video_metadata=data.video_metadata.model_dump() if data.video_metadata else {},
         status="uploaded" if data.video_storage_path else "created",
         started_at=datetime.utcnow(),
-        completed_at=datetime.utcnow()
     )
 
     db.add(new_asm)
