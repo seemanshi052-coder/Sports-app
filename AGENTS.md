@@ -76,6 +76,34 @@ Video
 
 Do not train a custom model unless explicitly approved.
 
+ ## OFFLINE AI REQUIREMENT
+
+Preparation Mode must be designed to support offline assessment.
+
+The core assessment pipeline must not depend on:
+- internet access
+- OpenAI API
+- cloud LLM
+- Supabase availability
+- remote inference
+
+Video measurement must be performed locally using on-device/local CV
+capabilities.
+
+LLMs are optional and must only provide coaching explanations based on
+already-measured metrics.
+
+AI measurement and scoring must remain deterministic and auditable.
+
+When offline:
+- assessment results must be stored locally
+- XP/streak/badge events must be queued locally
+- synchronization must occur when connectivity returns
+
+When online:
+- local results synchronize with FastAPI/Supabase
+- duplicate synchronization must be prevented using idempotent event IDs.
+
 ## Gamification
 
 XP must be idempotent.

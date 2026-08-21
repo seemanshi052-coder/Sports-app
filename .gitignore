@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 
+test_videos/
+*.mp4
+*.mov
+*.avi
+
 # Python
 __pycache__/
 *.py[cod]
@@ -39,6 +44,7 @@ Thumbs.db
 *.onnx
 *.pkl
 *.joblib
+*.task
 
 # Uploaded/local media
 uploads/
@@ -46,6 +52,7 @@ videos/
 *.mp4
 *.mov
 *.avi
+
 
 # Generated files
 coverage/

@@ -1,6 +1,14 @@
+import os
 import re
+from pathlib import Path
 from typing import Optional
 from pydantic_settings import BaseSettings
+
+# Resolve .env path relative to config.py's location.
+# config.py is at backend/app/core/config.py; .env sits at the repository root.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_ENV_FILE = _REPO_ROOT / ".env"
+
 
 def normalize_supabase_url(raw_url: Optional[str]) -> str:
     if not raw_url:
@@ -10,6 +18,7 @@ def normalize_supabase_url(raw_url: Optional[str]) -> str:
     if match and match.group(1):
         return f"https://{match.group(1)}.supabase.co"
     return trimmed
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "The Elitez - Sports Talent Platform API"
@@ -26,7 +35,7 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
-    PORT: int = 8000
+    PORT: int = 10000
     
     @property
     def normalized_supabase_url(self) -> str:
@@ -40,7 +49,7 @@ class Settings(BaseSettings):
         return ""
 
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE)
         case_sensitive = True
 
 settings = Settings()

@@ -2,7 +2,8 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     auth, athletes, sports, assessments, storage,
     leaderboard, scouts, achievements, community,
-    connections, messages, blocks, reports, notifications
+    connections, messages, blocks, reports, notifications,
+    fitness_tests
 )
 
 api_router = APIRouter()
@@ -21,3 +22,4 @@ api_router.include_router(assessments.router, prefix="/assessments", tags=["Asse
 api_router.include_router(storage.router, prefix="/storage", tags=["Storage & Video"])
 api_router.include_router(leaderboard.router, prefix="/leaderboard", tags=["Leaderboard"])
 api_router.include_router(scouts.router, prefix="/scout", tags=["Scouts & Coaches"])
+api_router.include_router(fitness_tests.router, prefix="/fitness-tests", tags=["Fitness Tests"])

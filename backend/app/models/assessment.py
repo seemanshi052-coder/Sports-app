@@ -1,6 +1,8 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime, Text, JSON, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+from app.models.user import AthleteProfile
+from app.models.achievement import Achievement
 
 class Assessment(Base):
     __tablename__ = "assessments"
@@ -17,6 +19,8 @@ class Assessment(Base):
     
     # Real Lifecycle status: created -> uploading -> uploaded -> pending_analysis -> completed -> failed
     status = Column(String(64), default="created")
+    
+    mode = Column(String(32), nullable=False, default="official")
     
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
