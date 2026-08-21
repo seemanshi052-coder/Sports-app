@@ -464,6 +464,7 @@ class ApiClient {
     required String assessmentType,
     required String videoStoragePath,
     required VideoMetadataModel metadata,
+    required String mode,
   }) async {
     final response = await http.post(
       Uri.parse('${Env.apiBaseUrl}/assessments'),
@@ -473,6 +474,7 @@ class ApiClient {
         'assessment_type': assessmentType,
         'video_storage_path': videoStoragePath,
         'video_metadata': metadata.toJson(),
+        'mode': mode,
       }),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {

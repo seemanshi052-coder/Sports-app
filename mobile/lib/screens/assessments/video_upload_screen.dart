@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -6,18 +5,20 @@ import '../../core/theme/app_theme.dart';
 import '../../core/network/api_client.dart';
 import '../../models/sport_model.dart';
 import '../../models/video_metadata.dart';
-import '../../models/assessment_model.dart';
 import 'assessment_status_screen.dart';
+import 'sport_selection_screen.dart';
 
 class VideoUploadScreen extends StatefulWidget {
   final SportModel sport;
   final AssessmentTypeModel drill;
+  final AssessmentMode mode;
   final XFile videoFile;
 
   const VideoUploadScreen({
     Key? key,
     required this.sport,
     required this.drill,
+    required this.mode,
     required this.videoFile,
   }) : super(key: key);
 
@@ -98,6 +99,7 @@ class _VideoUploadScreenState extends State<VideoUploadScreen> {
         assessmentType: widget.drill.id,
         videoStoragePath: storagePath,
         metadata: metadata,
+        mode: widget.mode == AssessmentMode.preparation ? 'preparation' : 'official',
       );
 
       setState(() {
@@ -137,9 +139,11 @@ class _VideoUploadScreenState extends State<VideoUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isOfficial = widget.mode == AssessmentMode.official;
+    
     return Scaffold(
       backgroundColor: AppTheme.darkBg,
-      appBar: AppBar(title: const Text('Review & Upload Video')),
+      appBar: AppBar(title: Text(isOfficial ? 'Official Assessment Upload' : 'Practice Session Upload')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -179,6 +183,22 @@ class _VideoUploadScreenState extends State<VideoUploadScreen> {
                             Text(
                               'Sport: ${widget.sport.name}',
                               style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                            ),
+                            const SizedBox(height: 2),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isOfficial ? Colors.blueAccent.withOpacity(0.2) : AppTheme.primaryGreen.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                isOfficial ? 'OFFICIAL ASSESSMENT' : 'PREPARATION MODE',
+                                style: TextStyle(
+                                  color: isOfficial ? Colors.blueAccent : AppTheme.primaryGreen,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -225,7 +245,7 @@ class _VideoUploadScreenState extends State<VideoUploadScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.cloud_upload_outlined),
-                  label: const Text('Confirm & Upload to Supabase'),
+                  label: Text(isOfficial ? 'Confirm & Upload Official Assessment' : 'Confirm & Upload Practice Session'),
                   onPressed: _startUploadAndVerification,
                 ),
               ),

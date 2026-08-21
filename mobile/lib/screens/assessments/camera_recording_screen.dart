@@ -4,15 +4,18 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/sport_model.dart';
 import 'video_upload_screen.dart';
+import 'sport_selection_screen.dart';
 
 class CameraRecordingScreen extends StatefulWidget {
   final SportModel sport;
   final AssessmentTypeModel drill;
+  final AssessmentMode mode;
 
   const CameraRecordingScreen({
     Key? key,
     required this.sport,
     required this.drill,
+    required this.mode,
   }) : super(key: key);
 
   @override
@@ -37,6 +40,7 @@ class _CameraRecordingScreenState extends State<CameraRecordingScreen> {
             builder: (_) => VideoUploadScreen(
               sport: widget.sport,
               drill: widget.drill,
+              mode: widget.mode,
               videoFile: video,
             ),
           ),
@@ -66,6 +70,7 @@ class _CameraRecordingScreenState extends State<CameraRecordingScreen> {
             builder: (_) => VideoUploadScreen(
               sport: widget.sport,
               drill: widget.drill,
+              mode: widget.mode,
               videoFile: video,
             ),
           ),
@@ -84,11 +89,36 @@ class _CameraRecordingScreenState extends State<CameraRecordingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isOfficial = widget.mode == AssessmentMode.official;
+    
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(widget.drill.name),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isOfficial ? Colors.blueAccent.withOpacity(0.2) : AppTheme.primaryGreen.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isOfficial ? 'OFFICIAL' : 'PRACTICE',
+                  style: TextStyle(
+                    color: isOfficial ? Colors.blueAccent : AppTheme.primaryGreen,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Stack(
         children: [

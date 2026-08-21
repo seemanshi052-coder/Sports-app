@@ -14,6 +14,7 @@ class AssessmentModel {
   final double? overallScore;
   final String? tier;
   final DateTime? createdAt;
+  final String mode; // preparation, official
 
   AssessmentModel({
     required this.id,
@@ -29,6 +30,7 @@ class AssessmentModel {
     this.overallScore,
     this.tier,
     this.createdAt,
+    required this.mode,
   });
 
   factory AssessmentModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,7 @@ class AssessmentModel {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
           : null,
+      mode: json['mode'] ?? 'official',
     );
   }
 }

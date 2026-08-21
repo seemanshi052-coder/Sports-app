@@ -10,7 +10,7 @@ import '../community/community_feed_screen.dart';
 import '../messages/conversations_screen.dart';
 import '../discover/discover_athletes_screen.dart';
 import '../notifications/notifications_screen.dart';
-import 'athlete_profile_screen.dart';
+
 
 class AthleteHomeScreen extends StatefulWidget {
   const AthleteHomeScreen({Key? key}) : super(key: key);
@@ -59,7 +59,7 @@ class _AthleteHomeScreenState extends State<AthleteHomeScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBg,
       appBar: AppBar(
-        title: const Text('The Elitez Hub'),
+        title: const Text('ELITEZ'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none),
@@ -75,7 +75,7 @@ class _AthleteHomeScreenState extends State<AthleteHomeScreen> {
               if (_profile != null) {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => AthleteProfileScreen(profile: _profile!),
+                    builder: (_) => const DiscoverAthletesScreen(),
                   ),
                 ).then((_) => _loadData());
               }
@@ -90,120 +90,72 @@ class _AthleteHomeScreenState extends State<AthleteHomeScreen> {
               color: AppTheme.primaryGreen,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Athlete Welcome Card
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryGreen.withOpacity(0.2),
-                            AppTheme.cardBg,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                    // Athlete profile header — inline, no card
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppTheme.cardBg,
+                          backgroundImage: _profile?.avatarUrl != null
+                              ? NetworkImage(_profile!.avatarUrl!)
+                              : null,
+                          child: _profile?.avatarUrl == null
+                              ? const Icon(Icons.person, color: AppTheme.textMuted, size: 28)
+                              : null,
                         ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 32,
-                            backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
-                            backgroundImage: _profile?.avatarUrl != null
-                                ? NetworkImage(_profile!.avatarUrl!)
-                                : null,
-                            child: _profile?.avatarUrl == null
-                                ? const Icon(Icons.person, color: AppTheme.primaryGreen, size: 32)
-                                : null,
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        _profile?.name ?? 'Athlete',
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _profile?.name ?? 'Athlete',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _profile?.sport.toUpperCase() ?? 'Sport',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star, color: AppTheme.accentAmber, size: 12),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _profile?.overallRating != null
+                                        ? '${_profile!.overallRating!.toStringAsFixed(1)} OVR'
+                                        : 'Unranked',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.accentAmber,
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primaryGreen.withOpacity(0.15),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.4)),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.star, color: AppTheme.primaryGreen, size: 14),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _profile?.overallRating != null
-                                                ? '${_profile!.overallRating!.toStringAsFixed(1)} OVR'
-                                                : 'Unranked',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppTheme.primaryGreen,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${_profile?.sport.toUpperCase()} • ${_profile?.position}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppTheme.primaryGreen,
-                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${_profile?.location} • Age ${_profile?.age}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.textMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 8),
 
-                    // Quick Action: Record New Drill
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.videocam, size: 22),
-                        label: const Text('Start Standardized Assessment', style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryGreen,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
+                    // Primary action: Record New Drill — outlined button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: OutlinedButton(
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -211,43 +163,73 @@ class _AthleteHomeScreenState extends State<AthleteHomeScreen> {
                             ),
                           ).then((_) => _loadData());
                         },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.primaryGreen,
+                          side: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5), width: 1),
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.videocam, size: 20),
+                            SizedBox(width: 6),
+                            Text('Record New Drill'),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // Quick Navigation Row (Leaderboard & History)
+                    // Quick navigation: Leaderboard & History — compact text links
                     Row(
                       children: [
                         Expanded(
-                          child: InkWell(
-                            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LeaderboardScreen())),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(color: AppTheme.cardBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white10)),
-                              child: Row(
-                                children: const [
-                                  Icon(Icons.leaderboard, color: AppTheme.primaryGreen, size: 20),
-                                  SizedBox(width: 10),
-                                  Text('Leaderboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                ],
-                              ),
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.leaderboard, size: 16, color: AppTheme.textMuted),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Leaderboard',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: InkWell(
-                            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AssessmentHistoryScreen())),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(color: AppTheme.cardBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white10)),
-                              child: Row(
-                                children: const [
-                                  Icon(Icons.history, color: Colors.blueAccent, size: 20),
-                                  SizedBox(width: 10),
-                                  Text('Drill History', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                ],
-                              ),
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AssessmentHistoryScreen()),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.history, size: 16, color: AppTheme.textMuted),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'History',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -255,99 +237,106 @@ class _AthleteHomeScreenState extends State<AthleteHomeScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Biometrics Overview
-                    const Text(
-                      'Physical Biometrics',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    // Performance summary row — compact, no cards
                     Row(
                       children: [
-                        Expanded(
-                          child: _buildBiometricTile(
-                            'Height',
-                            '${_profile?.heightCm ?? 175} cm',
-                            Icons.height,
-                          ),
+                        _PerformanceBox(
+                          label: 'Performance',
+                          value: '${_profile?.overallRating?.toStringAsFixed(1) ?? '—'}',
+                          icon: Icons.trending_up,
+                          color: AppTheme.primaryGreen,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildBiometricTile(
-                            'Weight',
-                            '${_profile?.weightKg ?? 70} kg',
-                            Icons.monitor_weight_outlined,
-                          ),
+                        _PerformanceBox(
+                          label: 'Assessments',
+                          value: '${_assessments.length}',
+                          icon: Icons.check_circle_outline,
+                          color: AppTheme.textMuted,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildBiometricTile(
-                            'Total Drills',
-                            '${_assessments.length}',
-                            Icons.check_circle_outline,
-                          ),
+                        _PerformanceBox(
+                          label: 'Progress',
+                          value: '+8%',
+                          icon: Icons.arrow_upward,
+                          color: AppTheme.accentAmber,
                         ),
                       ],
                     ),
                     const SizedBox(height: 28),
 
-                    // Recent Drill Recordings
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Recorded Assessments',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                    // Recent Drill Recordings — compact list, NOT cards
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Recent Activity',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const AssessmentHistoryScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('View All', style: TextStyle(color: AppTheme.primaryGreen)),
-                        ),
-                      ],
+                          Text(
+                            'View All',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
 
                     if (_assessments.isEmpty)
-                      Container(
-                        width: double.infinity,
+                      Padding(
                         padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.cardBorder),
-                        ),
                         child: Column(
-                          children: const [
-                            Icon(Icons.video_collection_outlined, color: AppTheme.textMuted, size: 36),
-                            SizedBox(height: 12),
-                            Text(
-                              'No Recorded Drills Yet',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          children: [
+                            Icon(
+                              Icons.video_collection_outlined,
+                              color: AppTheme.textMuted,
+                              size: 32,
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 12),
                             Text(
-                              'Tap "Start Standardized Assessment" above to record and verify your first drill.',
+                              'No assessments yet',
+                              style: TextStyle(
+                                color: AppTheme.textMuted,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Complete your first drill to start tracking your movement.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                              style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                            ),
+                            const SizedBox(height: 16),
+                            OutlinedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const SportSelectionScreen(),
+                                  ),
+                                ).then((_) => _loadData());
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.primaryGreen,
+                                side: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5), width: 1),
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              ),
+                              child: const Text('Start Assessment'),
                             ),
                           ],
                         ),
                       )
                     else
-                      ..._assessments.take(3).map((asm) => _buildAssessmentTile(asm)).toList(),
+                      ..._assessments.take(3).map((asm) => _buildRecentAssessmentRow(asm)).toList(),
                   ],
                 ),
               ),
@@ -371,72 +360,112 @@ class _AthleteHomeScreenState extends State<AthleteHomeScreen> {
     );
   }
 
-  Widget _buildBiometricTile(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.cardBorder),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppTheme.primaryGreen, size: 22),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-          const SizedBox(height: 2),
-          Text(title, style: const TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAssessmentTile(AssessmentModel asm) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.cardBorder),
-      ),
+  Widget _buildRecentAssessmentRow(AssessmentModel asm) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(10),
+              color: AppTheme.cardBg,
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.video_file_outlined, color: Colors.blueAccent),
+            child: const Icon(
+              Icons.video_file_outlined,
+              color: AppTheme.textMuted,
+              size: 20,
+            ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   asm.assessmentName,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 1),
                 Text(
                   'Sport: ${asm.sport.toUpperCase()}',
-                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 6),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+              color: AppTheme.primaryGreen.withOpacity(0.1),
+borderRadius: BorderRadius.circular(10),
+               border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3), width: 0.5),
             ),
             child: Text(
               asm.status.toUpperCase(),
-              style: const TextStyle(color: AppTheme.primaryGreen, fontSize: 10, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: AppTheme.primaryGreen,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PerformanceBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _PerformanceBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+      decoration: BoxDecoration(
+        color: Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 10,
             ),
           ),
         ],

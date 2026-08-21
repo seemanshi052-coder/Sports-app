@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/sport_model.dart';
 import 'camera_recording_screen.dart';
+import 'sport_selection_screen.dart';
 
 class DrillDetailScreen extends StatelessWidget {
   final SportModel sport;
   final AssessmentTypeModel drill;
+  final AssessmentMode mode;
 
   const DrillDetailScreen({
     Key? key,
     required this.sport,
     required this.drill,
+    required this.mode,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final isOfficial = mode == AssessmentMode.official;
+    
     return Scaffold(
       backgroundColor: AppTheme.darkBg,
       appBar: AppBar(
@@ -25,6 +30,27 @@ class DrillDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Mode Indicator Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isOfficial ? Colors.blueAccent.withOpacity(0.15) : AppTheme.primaryGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isOfficial ? Colors.blueAccent.withOpacity(0.3) : AppTheme.primaryGreen.withOpacity(0.3),
+                ),
+              ),
+              child: Text(
+                isOfficial ? 'STANDARDIZED ASSESSMENT' : 'PRACTICE SESSION',
+                style: TextStyle(
+                  color: isOfficial ? Colors.blueAccent : AppTheme.primaryGreen,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
             // Drill Header Badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -181,13 +207,14 @@ class DrillDetailScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.camera_alt),
-                label: const Text('Open Camera & Record Drill'),
+                label: Text(isOfficial ? 'Record Official Assessment' : 'Record Practice Session'),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => CameraRecordingScreen(
                         sport: sport,
                         drill: drill,
+                        mode: mode,
                       ),
                     ),
                   );

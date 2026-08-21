@@ -10,10 +10,15 @@ class AssessmentStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isOfficial = assessment.mode == 'official';
+    final modeLabel = isOfficial ? 'Official Assessment Analysis' : 'Preparation Analysis';
+    final modeColor = isOfficial ? Colors.blueAccent : AppTheme.primaryGreen;
+    final modeIcon = isOfficial ? Icons.verified : Icons.fitness_center;
+    
     return Scaffold(
       backgroundColor: AppTheme.darkBg,
       appBar: AppBar(
-        title: const Text('Assessment Submission'),
+        title: Text(modeLabel),
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
@@ -25,16 +30,16 @@ class AssessmentStatusScreen extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.15),
+                color: modeColor.withOpacity(0.15),
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.primaryGreen, width: 2),
+                border: Border.all(color: modeColor, width: 2),
               ),
-              child: const Icon(Icons.check, color: AppTheme.primaryGreen, size: 40),
+              child: Icon(modeIcon, color: modeColor, size: 40),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Video Uploaded & Queued',
-              style: TextStyle(
+            Text(
+              isOfficial ? 'Official Assessment Queued' : 'Practice Session Queued',
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
@@ -44,6 +49,22 @@ class AssessmentStatusScreen extends StatelessWidget {
             Text(
               'Assessment ID: ${assessment.id}',
               style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: modeColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isOfficial ? 'MODE: OFFICIAL' : 'MODE: PREPARATION',
+                style: TextStyle(
+                  color: modeColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
             const SizedBox(height: 28),
 
