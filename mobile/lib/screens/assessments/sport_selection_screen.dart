@@ -148,6 +148,30 @@ class _SportSelectionScreenState extends State<SportSelectionScreen> {
                     ),
                   );
                 }),
+                const SizedBox(height: 40),
+                // Continue Button
+                ElevatedButton(
+                  onPressed: _sports.isEmpty || _sports.first.assessmentTypes.isEmpty
+                      ? null
+                      : () {
+                          final firstDrill = _sports.first.assessmentTypes.first;
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => DrillDetailScreen(
+                                sport: _sports.first,
+                                drill: firstDrill,
+                                mode: _selectedMode,
+                              ),
+                            ),
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Continue'),
+                ),
               ],
             ),
     );
